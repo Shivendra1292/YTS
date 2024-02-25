@@ -13,7 +13,8 @@ def index():
     result = None
     if request.method == 'POST':
         user_input = request.form['user_in']
-        out=results(user_input)
+        input = u_in(user_input)
+        out=results(input)
         return render_template('index.html',output=out)
         # return redirect(url_for('process_input',input_data=user_input))
         # result = process_input(user_input)
@@ -22,11 +23,22 @@ def index():
 
 def results(user_in):
     transcript_list = YouTubeTranscriptApi.list_transcripts(user_in)
-    var='en'
+    var='hi'
     transcript = transcript_list.find_transcript(['de', 'en'])
     transcript = transcript_list.find_transcript(['en'])
     translated_transcript = transcript.translate('en')
-    return translated_transcript.fetch()  
+    return translated_transcript.fetch()
+    # return transcript.fetch()  
+
+
+def u_in(str):
+    ln= len(str)
+    fn = ""
+    for i in range(0,ln):
+        if(str[i]=='=' and str[i-1]=='v'):
+            for j in range(i+1,ln):
+                fn = fn+str[j]
+    return fn
 # @app.route('/<p>')
 # def process_input(input_data):
 #     # Add your logic to process the input data here
