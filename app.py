@@ -13,22 +13,34 @@ def index():
     result = None
     if request.method == 'POST':
         user_input = request.form['user_in']
+        lang =  request.form['lang']
+        # print(lang)
         input = u_in(user_input)
-        out=results(input)
+        out=results(input, lang)
         return render_template('index.html',output=out)
         # return redirect(url_for('process_input',input_data=user_input))
         # result = process_input(user_input)
     else:
         return render_template('index.html')
 
-def results(user_in):
+def results(user_in, language):
     transcript_list = YouTubeTranscriptApi.list_transcripts(user_in)
-    var='hi'
-    transcript = transcript_list.find_transcript(['de', 'en'])
-    transcript = transcript_list.find_transcript(['en'])
-    translated_transcript = transcript.translate('en')
-    return translated_transcript.fetch()
+    # transcript = transcript_list.find_transcript(['de', 'en'])
+    transcript = transcript_list.find_transcript([language])
+    translated_transcript = transcript.translate('bg')
+    var = translated_transcript.fetch()
+    # var = transcript.fetch()
+    final = returnText(var)
+    return final
     # return transcript.fetch()  
+
+def returnText(ls):
+    n= len(ls)
+    res = ""
+    for i in range(0,n):
+       res =  res + ls[i]['text']+ " "
+    return res
+
 
 
 def u_in(str):
@@ -39,15 +51,9 @@ def u_in(str):
             for j in range(i+1,ln):
                 fn = fn+str[j]
     return fn
-# @app.route('/<p>')
-# def process_input(input_data):
-#     # Add your logic to process the input data here
-#     # For example, you can convert the input to uppercase
-#     return f"<h1>{input_data}</h1>"
+
 @app.route('/out')
 def out():
-    # Add your logic to process the input data here
-    # For example, you can convert the input to uppercase
      return render_template('out.html')
 
 
