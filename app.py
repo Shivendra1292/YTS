@@ -27,9 +27,9 @@ def results(user_in, language):
     transcript_list = YouTubeTranscriptApi.list_transcripts(user_in)
     # transcript = transcript_list.find_transcript(['de', 'en'])
     transcript = transcript_list.find_transcript([language])
-    translated_transcript = transcript.translate('bg')
-    var = translated_transcript.fetch()
-    # var = transcript.fetch()
+    # translated_transcript = transcript.translate('hi')
+    # var = translated_transcript.fetch()
+    var = transcript.fetch()
     final = returnText(var)
     return final
     # return transcript.fetch()  
