@@ -1,5 +1,8 @@
 from flask import Flask, render_template,request,redirect,url_for
 from youtube_transcript_api import YouTubeTranscriptApi
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer
 
 app = Flask(__name__)
 
@@ -31,6 +34,10 @@ def results(user_in, language):
     # var = translated_transcript.fetch()
     var = transcript.fetch()
     final = returnText(var)
+    parser = PlaintextParser.from_string(final, Tokenizer("english"))
+    summarizer = LsaSummarizer()
+    summary = summarizer(parser.document, 5)
+    sentence_text = " ".join(summary[0].words)
     return final
     # return transcript.fetch()  
 
