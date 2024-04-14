@@ -3,6 +3,13 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer
+import spacy
+from spacy.lang.en.stop_words import STOP_WORDS
+from string import punctuation
+stopwords = list(STOP_WORDS)
+
+# Load the English model in spaCy
+nlp = spacy.load("en_core_web_sm")
 
 app = Flask(__name__)
 
@@ -34,11 +41,24 @@ def results(user_in, language):
     # var = translated_transcript.fetch()
     var = transcript.fetch()
     final = returnText(var)
-    parser = PlaintextParser.from_string(final, Tokenizer("english"))
-    summarizer = LsaSummarizer()
-    summary = summarizer(parser.document, 5)
-    sentence_text = " ".join(summary[0].words)
-    return final
+    summ = summarizeText(final)
+    # print(len(final))
+    # doc = nlp(final)
+    # sentences = [sentence.text for sentence in doc.sents]
+    # processed_text = " ".join(sentences)
+    # parser = PlaintextParser.from_string(processed_text, Tokenizer("english"))
+    # summarizer = LsaSummarizer()
+
+    # # Summarize the text
+    # summary = summarizer(parser.document, 2)  # Summarize to 2 sentences
+
+    # # Convert the summary to a string
+    # summary_text = " ".join([str(sentence) for sentence in summary])
+    # print(len(summary_text))
+    # summarizer = LsaSummarizer()
+    # summary = summarizer(parser.document, 4)
+    # sentence_text = " ".join(summary[0].words)  // Not Working as aspected
+    return summ
     # return transcript.fetch()  
 
 def returnText(ls):
@@ -47,6 +67,60 @@ def returnText(ls):
     for i in range(0,n):
        res =  res + ls[i]['text']+ " "
     return res
+
+def summarizeText(document):
+
+    lengthText = len(document)
+    print("Before:", lengthText)
+    num = int(calculate_ratio(lengthText,(166,5)))
+    print("ratio:",num)
+    nlp = spacy.load('en_core_web_sm')
+    docx = nlp(document)
+    mytokens = [token.text for token in docx]
+
+    # Build Word Frequency
+    # word.text is tokenization in spacy
+    word_frequencies = {}
+    for word in docx:
+        if word.text not in stopwords:
+                if word.text not in word_frequencies.keys():
+                    word_frequencies[word.text] = 1
+                else:
+                    word_frequencies[word.text] += 1
+    # print(word_frequencies)
+
+
+    maximum_frequency = max(word_frequencies.values())
+    for word in word_frequencies.keys():  
+            word_frequencies[word] = (word_frequencies[word]/maximum_frequency)
+
+    sentence_list = [ sentence for sentence in docx.sents ]
+
+    # Sentence Score via comparrng each word with sentence
+    sentence_scores = {}  
+    for sent in sentence_list:  
+            for word in sent:
+                if word.text.lower() in word_frequencies.keys():
+                    if len(sent.text.split(' ')) < num:
+                        if sent not in sentence_scores.keys():
+                            sentence_scores[sent] = word_frequencies[word.text.lower()]
+                        else:
+                            sentence_scores[sent] += word_frequencies[word.text.lower()]
+
+    from heapq import nlargest
+
+    summarized_sentences = nlargest(7, sentence_scores, key=sentence_scores.get)
+    # print(summarized_sentences)
+    final_sentences = [ w.text for w in summarized_sentences ]
+    summary = ' '.join(final_sentences)
+    print("After: ",len(summary))
+    return summary
+
+def calculate_ratio(a, ratio):
+    # Calculate the ratio
+    ratio_b = a * ratio[1] / ratio[0]
+    
+    return ratio_b
 
 
 
